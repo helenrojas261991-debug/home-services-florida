@@ -52,11 +52,11 @@ export const googleReviews = mysqlTable("googleReviews", {
   id: int("id").autoincrement().primaryKey(),
   googleReviewId: varchar("googleReviewId", { length: 128 }).notNull().unique(),
   authorName: varchar("authorName", { length: 255 }).notNull(),
-  rating: int("rating").notNull(), // 1-5 stars
-  comment: text("comment"),
-  replyComment: text("replyComment"),
-  replyTime: timestamp("replyTime"),
+  rating: decimal("rating", { precision: 2, scale: 1 }).notNull(),
+  reviewText: text("reviewText"),
+  reviewTime: timestamp("reviewTime"),
   authorPhotoUrl: text("authorPhotoUrl"),
+  isVerifiedBuyer: boolean("isVerifiedBuyer").default(false),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
 });
@@ -94,7 +94,6 @@ export const integrationSettings = mysqlTable("integrationSettings", {
   refreshToken: text("refreshToken"),
   businessId: varchar("businessId", { length: 128 }),
   instagramBusinessAccountId: varchar("instagramBusinessAccountId", { length: 128 }),
-  googleLocationName: varchar("googleLocationName", { length: 255 }),
   lastSyncedAt: timestamp("lastSyncedAt"),
   isActive: boolean("isActive").default(true),
   createdAt: timestamp("createdAt").defaultNow().notNull(),

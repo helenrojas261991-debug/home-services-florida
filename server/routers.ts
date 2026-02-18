@@ -3,9 +3,6 @@ import { getSessionCookieOptions } from "./_core/cookies";
 import { systemRouter } from "./_core/systemRouter";
 import { publicProcedure, protectedProcedure, router } from "./_core/trpc";
 import { instagramRouter } from "./instagram.router";
-import { googleBusinessRouter } from "./google-business.router";
-import { mediaRouter } from "./media.router";
-import { adminAuthRouter } from "./admin-auth.router";
 import { z } from "zod";
 import {
   getGoogleReviews,
@@ -21,10 +18,6 @@ import {
 
 export const appRouter = router({
   system: systemRouter,
-  instagram: instagramRouter,
-  googleBusiness: googleBusinessRouter,
-  media: mediaRouter,
-  adminAuth: adminAuthRouter,
   
   auth: router({
     me: publicProcedure.query(opts => opts.ctx.user),
@@ -106,9 +99,51 @@ export const appRouter = router({
       }),
 
     /**
-     * Get all content
+     * Submit contact form
      */
-    getAllContent: publicProcedure.query(async () => {
+    submitContact: publicProcedure
+      .input(
+        z.object({
+          name: z.string().min(2),
+          email: z.string().email(),
+          phone: z.string().optional(),
+          message: z.string().min(10),
+          subject: z.string().optional(),
+        })
+      )
+      .mutation(async ({ input }) => {
+        try {
+          const submission = await createContactSubmission({
+            name: input.name,
+            email: input.email,
+            phone: input.phone,
+            message: input.message,
+            subject: input.subject,
+            status: "new",
+          });
+          return {
+            success: true,
+            data: submission,
+          };
+        } catch (error) {
+          console.error("Error submitting contact form:", error);
+          return {
+            success: false,
+            error: "Failed to submit contact form",
+          };
+        }
+      }),
+  }),
+
+  // Admin procedures
+  admin: router({
+    /**
+     * Get all content (admin only)
+     */
+    getAllContent: protectedProcedure.query(async ({ ctx }) => {
+      if (ctx.user?.role !== "admin") {
+        throw new Error("Unauthorized");
+      }
       try {
         const content = await getAllContent();
         return {
@@ -126,41 +161,6 @@ export const appRouter = router({
     }),
 
     /**
-     * Submit contact form
-     */
-    submitContact: publicProcedure
-      .input(
-        z.object({
-          name: z.string().min(1),
-          email: z.string().email(),
-          phone: z.string().optional(),
-          message: z.string().min(1),
-        })
-      )
-      .mutation(async ({ input }) => {
-        try {
-          await createContactSubmission({
-            name: input.name,
-            email: input.email,
-            phone: input.phone,
-            message: input.message,
-          });
-          return {
-            success: true,
-          };
-        } catch (error) {
-          console.error("Error submitting contact form:", error);
-          return {
-            success: false,
-            error: "Failed to submit contact form",
-          };
-        }
-      }),
-  }),
-
-  // Admin procedures
-  admin: router({
-    /**
      * Update content (admin only)
      */
     updateContent: protectedProcedure
@@ -176,13 +176,12 @@ export const appRouter = router({
           metadata: z.record(z.string(), z.any()).optional(),
         })
       )
-      .mutation(async ({ ctx, input }) => {
+      .mutation(async ({ input, ctx }) => {
         if (ctx.user?.role !== "admin") {
           throw new Error("Unauthorized");
         }
-
         try {
-          await upsertContent({
+          const content = await upsertContent({
             key: input.key,
             titleEn: input.titleEn,
             titleEs: input.titleEs,
@@ -194,6 +193,7 @@ export const appRouter = router({
           });
           return {
             success: true,
+            data: content,
           };
         } catch (error) {
           console.error("Error updating content:", error);
@@ -209,11 +209,10 @@ export const appRouter = router({
      */
     getIntegrationSettings: protectedProcedure
       .input(z.object({ service: z.string() }))
-      .query(async ({ ctx, input }) => {
+      .query(async ({ input, ctx }) => {
         if (ctx.user?.role !== "admin") {
           throw new Error("Unauthorized");
         }
-
         try {
           const settings = await getIntegrationSettings(input.service);
           return {
@@ -241,27 +240,25 @@ export const appRouter = router({
           refreshToken: z.string().optional(),
           businessId: z.string().optional(),
           instagramBusinessAccountId: z.string().optional(),
-          googleLocationName: z.string().optional(),
           isActive: z.boolean().optional(),
         })
       )
-      .mutation(async ({ ctx, input }) => {
+      .mutation(async ({ input, ctx }) => {
         if (ctx.user?.role !== "admin") {
           throw new Error("Unauthorized");
         }
-
         try {
-          await upsertIntegrationSettings({
+          const settings = await upsertIntegrationSettings({
             service: input.service,
             accessToken: input.accessToken,
             refreshToken: input.refreshToken,
             businessId: input.businessId,
             instagramBusinessAccountId: input.instagramBusinessAccountId,
-            googleLocationName: input.googleLocationName,
             isActive: input.isActive,
           });
           return {
             success: true,
+            data: settings,
           };
         } catch (error) {
           console.error("Error updating integration settings:", error);
@@ -276,14 +273,13 @@ export const appRouter = router({
      * Get contact submissions (admin only)
      */
     getContactSubmissions: protectedProcedure
-      .input(z.object({ limit: z.number().optional() }))
-      .query(async ({ ctx, input }) => {
+      .input(z.object({ limit: z.number().default(50) }))
+      .query(async ({ input, ctx }) => {
         if (ctx.user?.role !== "admin") {
           throw new Error("Unauthorized");
         }
-
         try {
-          const submissions = await getContactSubmissions(input?.limit);
+          const submissions = await getContactSubmissions(input.limit);
           return {
             success: true,
             data: submissions,
@@ -298,6 +294,8 @@ export const appRouter = router({
         }
       }),
   }),
+
+  instagram: instagramRouter,
 });
 
 export type AppRouter = typeof appRouter;
