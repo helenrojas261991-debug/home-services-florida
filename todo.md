@@ -55,3 +55,15 @@
 - [x] Express server and tRPC setup
 - [x] React 19 + Tailwind CSS 4 configured
 - [x] Manus OAuth authentication ready
+
+
+## Instagram Integration Tasks
+- [x] Create Instagram API helper functions
+- [ ] Implement Instagram token refresh mechanism (optional enhancement)
+- [x] Create tRPC procedures for Instagram sync
+- [ ] Implement periodic sync job for Instagram posts (optional enhancement)
+- [x] Update Home page to fetch and display real Instagram posts
+- [x] Create Instagram settings panel in admin dashboard
+- [x] Add Instagram configuration UI in admin
+- [x] Write tests for Instagram integration
+- [x] Document Instagram API setup process

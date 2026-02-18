@@ -198,11 +198,13 @@ Para integrar Google Business Profile:
 
 Para integrar Instagram:
 
-1. Crea una aplicación de Instagram Graph API
-2. Obtén el token de acceso de tu cuenta de negocio
+1. Crea una aplicación de Instagram Graph API en Facebook Developer Console
+2. Obtén el token de acceso de tu cuenta de negocio de Instagram
 3. Accede al panel de administración (`/admin`)
-4. Configura el token en la sección de configuración
-5. Los posts se sincronizarán automáticamente
+4. Ve a **Instagram Settings** y configura tu token
+5. Los posts se sincronizarán automáticamente en la galería
+
+**Para instrucciones detalladas**, consulta [INSTAGRAM_SETUP.md](./INSTAGRAM_SETUP.md)
 
 ## 🎨 Personalización
 

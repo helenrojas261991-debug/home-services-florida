@@ -1,11 +1,14 @@
 import { useLanguage } from "@/contexts/LanguageContext";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Star, Phone, Mail, MapPin, Clock, Shield, Users, Zap, Award } from "lucide-react";
+import { Star, Phone, Mail, MapPin, Clock, Shield, Users, Zap, Award, Loader } from "lucide-react";
 import { useState } from "react";
+import { useInstagramPosts } from "@/hooks/useInstagramPosts";
 
 export default function Home() {
   const { language, setLanguage, t } = useLanguage();
+  const { posts: instagramPosts, isLoading: instagramLoading } = useInstagramPosts(12);
+
   const [reviews] = useState([
     {
       id: 1,
@@ -28,15 +31,6 @@ export default function Home() {
       text: "Highly recommended. Best plumbing service in Miami.",
       verified: true,
     },
-  ]);
-
-  const [instagramPosts] = useState([
-    { id: 1, image: "https://via.placeholder.com/300x300?text=Work+1" },
-    { id: 2, image: "https://via.placeholder.com/300x300?text=Work+2" },
-    { id: 3, image: "https://via.placeholder.com/300x300?text=Work+3" },
-    { id: 4, image: "https://via.placeholder.com/300x300?text=Work+4" },
-    { id: 5, image: "https://via.placeholder.com/300x300?text=Work+5" },
-    { id: 6, image: "https://via.placeholder.com/300x300?text=Work+6" },
   ]);
 
   const services = [
@@ -264,25 +258,62 @@ export default function Home() {
           <h2 className="text-4xl font-bold text-center mb-12 text-gray-800">
             {t("gallery.title")}
           </h2>
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mb-12">
-            {instagramPosts.map((post) => (
-              <div
-                key={post.id}
-                className="aspect-square rounded-lg overflow-hidden hover:shadow-lg transition cursor-pointer"
-              >
-                <img
-                  src={post.image}
-                  alt={`Work ${post.id}`}
-                  className="w-full h-full object-cover hover:scale-105 transition"
-                />
+          {instagramLoading ? (
+            <div className="flex justify-center items-center py-12">
+              <Loader className="w-8 h-8 animate-spin text-blue-600" />
+            </div>
+          ) : instagramPosts && instagramPosts.length > 0 ? (
+            <>
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mb-12">
+                {instagramPosts.map((post) => (
+                  <a
+                    key={post.id}
+                    href={post.permalink || "#"}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="aspect-square rounded-lg overflow-hidden hover:shadow-lg transition cursor-pointer group relative"
+                  >
+                    <img
+                      src={post.mediaUrl}
+                      alt={post.caption || "Instagram post"}
+                      className="w-full h-full object-cover group-hover:scale-105 transition"
+                    />
+                    {post.caption && (
+                      <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition flex items-center justify-center p-4">
+                        <p className="text-white text-sm text-center line-clamp-3">
+                          {post.caption}
+                        </p>
+                      </div>
+                    )}
+                  </a>
+                ))}
               </div>
-            ))}
-          </div>
-          <div className="text-center">
-            <Button size="lg" className="bg-orange-500 hover:bg-orange-600">
-              {t("gallery.followUs")}
-            </Button>
-          </div>
+              <div className="text-center">
+                <a
+                  href="https://instagram.com"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  <Button size="lg" className="bg-orange-500 hover:bg-orange-600">
+                    {t("gallery.followUs")}
+                  </Button>
+                </a>
+              </div>
+            </>
+          ) : (
+            <div className="text-center py-12">
+              <p className="text-gray-600 mb-4">No Instagram posts available yet</p>
+              <a
+                href="https://instagram.com"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <Button size="lg" className="bg-orange-500 hover:bg-orange-600">
+                  {t("gallery.followUs")}
+                </Button>
+              </a>
+            </div>
+          )}
         </div>
       </section>
 
@@ -361,9 +392,15 @@ export default function Home() {
             <div>
               <h3 className="font-bold text-lg mb-4">{t("footer.followUs")}</h3>
               <div className="flex gap-4">
-                <a href="#" className="text-gray-400 hover:text-white">Facebook</a>
-                <a href="#" className="text-gray-400 hover:text-white">Instagram</a>
-                <a href="#" className="text-gray-400 hover:text-white">Twitter</a>
+                <a href="#" className="text-gray-400 hover:text-white">
+                  Facebook
+                </a>
+                <a href="#" className="text-gray-400 hover:text-white">
+                  Instagram
+                </a>
+                <a href="#" className="text-gray-400 hover:text-white">
+                  Twitter
+                </a>
               </div>
             </div>
             <div>
