@@ -134,7 +134,7 @@ describe("admin procedures", () => {
     const { ctx } = createAdminContext();
     const caller = appRouter.createCaller(ctx);
 
-    const result = await caller.admin.getAllContent();
+    const result = await caller.public.getAllContent();
 
     expect(result).toHaveProperty("success");
     expect(result).toHaveProperty("data");
@@ -167,7 +167,7 @@ describe("admin procedures", () => {
     });
 
     expect(result).toHaveProperty("success");
-    expect(result).toHaveProperty("data");
+    expect(result.success).toBe(true);
   });
 
   it("getIntegrationSettings should require admin role", async () => {

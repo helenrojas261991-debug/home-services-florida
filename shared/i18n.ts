@@ -106,6 +106,12 @@ export const translations = {
       success: "Success!",
       error: "Error",
     },
+    // Google Business
+    testimonials_title: "What Our Customers Say",
+    testimonials_subtitle: "Read reviews from satisfied customers who have experienced our professional services",
+    reviews_count: "reviews",
+    business_reply: "Business Response",
+    no_reviews_yet: "No reviews yet. Be the first to share your experience!",
   },
   es: {
     // Navegación
@@ -207,6 +213,12 @@ export const translations = {
       success: "¡Éxito!",
       error: "Error",
     },
+    // Google Business
+    testimonials_title: "Lo que Dicen Nuestros Clientes",
+    testimonials_subtitle: "Lee reseñas de clientes satisfechos que han experimentado nuestros servicios profesionales",
+    reviews_count: "reseñas",
+    business_reply: "Respuesta del Negocio",
+    no_reviews_yet: "Sin reseñas aún. ¡Sé el primero en compartir tu experiencia!",
   },
 };
 
@@ -214,7 +226,7 @@ export const translations = {
  * Get translation by key and language
  * Supports nested keys with dot notation (e.g., "nav.home")
  */
-export function t(key: string, language: Language): string {
+export function t(key: string, language: Language = "en"): string {
   const keys = key.split(".");
   let value: any = translations[language];
 

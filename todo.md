@@ -67,3 +67,14 @@
 - [x] Add Instagram configuration UI in admin
 - [x] Write tests for Instagram integration
 - [x] Document Instagram API setup process
+
+
+## Google Business Profile Integration Tasks
+- [x] Create Google Business Profile API helper functions
+- [x] Create tRPC procedures for Google reviews sync
+- [ ] Implement periodic sync job for Google reviews (optional enhancement)
+- [x] Update Home page to fetch and display real Google reviews
+- [x] Create Google Business settings panel in admin dashboard
+- [x] Add Google Business configuration UI in admin
+- [x] Write tests for Google Business integration
+- [x] Document Google Business Profile API setup process

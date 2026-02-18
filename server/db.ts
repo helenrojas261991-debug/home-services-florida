@@ -153,7 +153,7 @@ export async function getGoogleReviews(limit: number = 10): Promise<GoogleReview
   const db = await getDb();
   if (!db) return [];
 
-  return await db.select().from(googleReviews).orderBy(desc(googleReviews.reviewTime)).limit(limit);
+  return await db.select().from(googleReviews).orderBy(desc(googleReviews.updatedAt)).limit(limit);
 }
 
 export async function upsertGoogleReview(review: InsertGoogleReview): Promise<GoogleReview> {
