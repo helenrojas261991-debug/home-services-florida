@@ -9,16 +9,24 @@ export function useAdminAuth() {
   const logoutMutation = trpc.adminAuth.logout.useMutation();
 
   useEffect(() => {
-    if (checkSessionQuery.data) {
+    // Update authentication state when query completes
+    if (checkSessionQuery.data !== undefined) {
       setIsAuthenticated(checkSessionQuery.data.authenticated);
       setIsLoading(false);
     }
-  }, [checkSessionQuery.data]);
+    // Also stop loading if there's an error
+    if (checkSessionQuery.error) {
+      setIsAuthenticated(false);
+      setIsLoading(false);
+    }
+  }, [checkSessionQuery.data, checkSessionQuery.error]);
 
   const logout = async () => {
     try {
       await logoutMutation.mutateAsync();
       setIsAuthenticated(false);
+      // Refetch session to confirm logout
+      await checkSessionQuery.refetch();
     } catch (error) {
       console.error("Logout error:", error);
     }

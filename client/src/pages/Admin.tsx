@@ -19,9 +19,9 @@ export default function Admin() {
     "dashboard" | "media" | "content" | "gallery" | "instagram" | "google"
   >("dashboard");
 
-  // Redirect if not authenticated
+  // Redirect if not authenticated (but only after loading is complete)
   useEffect(() => {
-    if (!isLoading && !isAuthenticated) {
+    if (!isLoading && isAuthenticated === false) {
       setLocation("/admin/login");
     }
   }, [isAuthenticated, isLoading, setLocation]);
