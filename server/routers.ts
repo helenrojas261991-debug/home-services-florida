@@ -1,11 +1,23 @@
 import { COOKIE_NAME } from "@shared/const";
 import { getSessionCookieOptions } from "./_core/cookies";
 import { systemRouter } from "./_core/systemRouter";
-import { publicProcedure, router } from "./_core/trpc";
+import { publicProcedure, protectedProcedure, router } from "./_core/trpc";
+import { z } from "zod";
+import {
+  getGoogleReviews,
+  getInstagramPosts,
+  getContentByKey,
+  getAllContent,
+  upsertContent,
+  getIntegrationSettings,
+  upsertIntegrationSettings,
+  createContactSubmission,
+  getContactSubmissions,
+} from "./db";
 
 export const appRouter = router({
-    // if you need to use socket.io, read and register route in server/_core/index.ts, all api should start with '/api/' so that the gateway can route correctly
   system: systemRouter,
+  
   auth: router({
     me: publicProcedure.query(opts => opts.ctx.user),
     logout: publicProcedure.mutation(({ ctx }) => {
@@ -17,12 +29,270 @@ export const appRouter = router({
     }),
   }),
 
-  // TODO: add feature routers here, e.g.
-  // todo: router({
-  //   list: protectedProcedure.query(({ ctx }) =>
-  //     db.getUserTodos(ctx.user.id)
-  //   ),
-  // }),
+  // Public procedures for frontend
+  public: router({
+    /**
+     * Get Google Business Profile reviews
+     */
+    getGoogleReviews: publicProcedure
+      .input(z.object({ limit: z.number().default(10) }).optional())
+      .query(async ({ input }) => {
+        try {
+          const reviews = await getGoogleReviews(input?.limit || 10);
+          return {
+            success: true,
+            data: reviews,
+          };
+        } catch (error) {
+          console.error("Error fetching Google reviews:", error);
+          return {
+            success: false,
+            data: [],
+            error: "Failed to fetch reviews",
+          };
+        }
+      }),
+
+    /**
+     * Get Instagram posts from cache
+     */
+    getInstagramPosts: publicProcedure
+      .input(z.object({ limit: z.number().default(12) }).optional())
+      .query(async ({ input }) => {
+        try {
+          const posts = await getInstagramPosts(input?.limit || 12);
+          return {
+            success: true,
+            data: posts,
+          };
+        } catch (error) {
+          console.error("Error fetching Instagram posts:", error);
+          return {
+            success: false,
+            data: [],
+            error: "Failed to fetch posts",
+          };
+        }
+      }),
+
+    /**
+     * Get content by key
+     */
+    getContent: publicProcedure
+      .input(z.object({ key: z.string() }))
+      .query(async ({ input }) => {
+        try {
+          const content = await getContentByKey(input.key);
+          return {
+            success: true,
+            data: content,
+          };
+        } catch (error) {
+          console.error("Error fetching content:", error);
+          return {
+            success: false,
+            data: null,
+            error: "Failed to fetch content",
+          };
+        }
+      }),
+
+    /**
+     * Submit contact form
+     */
+    submitContact: publicProcedure
+      .input(
+        z.object({
+          name: z.string().min(2),
+          email: z.string().email(),
+          phone: z.string().optional(),
+          message: z.string().min(10),
+          subject: z.string().optional(),
+        })
+      )
+      .mutation(async ({ input }) => {
+        try {
+          const submission = await createContactSubmission({
+            name: input.name,
+            email: input.email,
+            phone: input.phone,
+            message: input.message,
+            subject: input.subject,
+            status: "new",
+          });
+          return {
+            success: true,
+            data: submission,
+          };
+        } catch (error) {
+          console.error("Error submitting contact form:", error);
+          return {
+            success: false,
+            error: "Failed to submit contact form",
+          };
+        }
+      }),
+  }),
+
+  // Admin procedures
+  admin: router({
+    /**
+     * Get all content (admin only)
+     */
+    getAllContent: protectedProcedure.query(async ({ ctx }) => {
+      if (ctx.user?.role !== "admin") {
+        throw new Error("Unauthorized");
+      }
+      try {
+        const content = await getAllContent();
+        return {
+          success: true,
+          data: content,
+        };
+      } catch (error) {
+        console.error("Error fetching all content:", error);
+        return {
+          success: false,
+          data: [],
+          error: "Failed to fetch content",
+        };
+      }
+    }),
+
+    /**
+     * Update content (admin only)
+     */
+    updateContent: protectedProcedure
+      .input(
+        z.object({
+          key: z.string(),
+          titleEn: z.string().optional(),
+          titleEs: z.string().optional(),
+          descriptionEn: z.string().optional(),
+          descriptionEs: z.string().optional(),
+          imageUrl: z.string().optional(),
+          videoUrl: z.string().optional(),
+          metadata: z.record(z.string(), z.any()).optional(),
+        })
+      )
+      .mutation(async ({ input, ctx }) => {
+        if (ctx.user?.role !== "admin") {
+          throw new Error("Unauthorized");
+        }
+        try {
+          const content = await upsertContent({
+            key: input.key,
+            titleEn: input.titleEn,
+            titleEs: input.titleEs,
+            descriptionEn: input.descriptionEn,
+            descriptionEs: input.descriptionEs,
+            imageUrl: input.imageUrl,
+            videoUrl: input.videoUrl,
+            metadata: input.metadata,
+          });
+          return {
+            success: true,
+            data: content,
+          };
+        } catch (error) {
+          console.error("Error updating content:", error);
+          return {
+            success: false,
+            error: "Failed to update content",
+          };
+        }
+      }),
+
+    /**
+     * Get integration settings (admin only)
+     */
+    getIntegrationSettings: protectedProcedure
+      .input(z.object({ service: z.string() }))
+      .query(async ({ input, ctx }) => {
+        if (ctx.user?.role !== "admin") {
+          throw new Error("Unauthorized");
+        }
+        try {
+          const settings = await getIntegrationSettings(input.service);
+          return {
+            success: true,
+            data: settings,
+          };
+        } catch (error) {
+          console.error("Error fetching integration settings:", error);
+          return {
+            success: false,
+            data: null,
+            error: "Failed to fetch settings",
+          };
+        }
+      }),
+
+    /**
+     * Update integration settings (admin only)
+     */
+    updateIntegrationSettings: protectedProcedure
+      .input(
+        z.object({
+          service: z.string(),
+          accessToken: z.string().optional(),
+          refreshToken: z.string().optional(),
+          businessId: z.string().optional(),
+          instagramBusinessAccountId: z.string().optional(),
+          isActive: z.boolean().optional(),
+        })
+      )
+      .mutation(async ({ input, ctx }) => {
+        if (ctx.user?.role !== "admin") {
+          throw new Error("Unauthorized");
+        }
+        try {
+          const settings = await upsertIntegrationSettings({
+            service: input.service,
+            accessToken: input.accessToken,
+            refreshToken: input.refreshToken,
+            businessId: input.businessId,
+            instagramBusinessAccountId: input.instagramBusinessAccountId,
+            isActive: input.isActive,
+          });
+          return {
+            success: true,
+            data: settings,
+          };
+        } catch (error) {
+          console.error("Error updating integration settings:", error);
+          return {
+            success: false,
+            error: "Failed to update settings",
+          };
+        }
+      }),
+
+    /**
+     * Get contact submissions (admin only)
+     */
+    getContactSubmissions: protectedProcedure
+      .input(z.object({ limit: z.number().default(50) }))
+      .query(async ({ input, ctx }) => {
+        if (ctx.user?.role !== "admin") {
+          throw new Error("Unauthorized");
+        }
+        try {
+          const submissions = await getContactSubmissions(input.limit);
+          return {
+            success: true,
+            data: submissions,
+          };
+        } catch (error) {
+          console.error("Error fetching contact submissions:", error);
+          return {
+            success: false,
+            data: [],
+            error: "Failed to fetch submissions",
+          };
+        }
+      }),
+  }),
 });
 
 export type AppRouter = typeof appRouter;
