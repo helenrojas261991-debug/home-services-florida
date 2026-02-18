@@ -78,3 +78,14 @@
 - [x] Add Google Business configuration UI in admin
 - [x] Write tests for Google Business integration
 - [x] Document Google Business Profile API setup process
+
+
+## Admin Panel - Media Upload & Content Management
+- [x] Create media upload interface with S3 storage integration
+- [x] Implement file validation (size, type, dimensions)
+- [x] Add drag-and-drop upload functionality
+- [x] Create content editor for text fields (hero, services, contact info)
+- [x] Build gallery manager (upload, organize, delete media)
+- [x] Add preview functionality for changes
+- [x] Write tests for media upload and content management
+- [x] Document admin panel usage

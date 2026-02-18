@@ -4,6 +4,7 @@ import { systemRouter } from "./_core/systemRouter";
 import { publicProcedure, protectedProcedure, router } from "./_core/trpc";
 import { instagramRouter } from "./instagram.router";
 import { googleBusinessRouter } from "./google-business.router";
+import { mediaRouter } from "./media.router";
 import { z } from "zod";
 import {
   getGoogleReviews,
@@ -21,6 +22,7 @@ export const appRouter = router({
   system: systemRouter,
   instagram: instagramRouter,
   googleBusiness: googleBusinessRouter,
+  media: mediaRouter,
   
   auth: router({
     me: publicProcedure.query(opts => opts.ctx.user),
